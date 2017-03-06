@@ -1,11 +1,11 @@
-import React, { Component } from 'react';
-import { ScrollView, View, Text, Linking } from 'react-native';
+import { Icon, List, ListItem } from 'react-native-elements'
+import { Linking, ScrollView, Text, View } from 'react-native';
 import Meteor, { createContainer } from 'react-native-meteor';
-import { List, ListItem, Icon } from 'react-native-elements'
+import React, { Component } from 'react';
 
 import { initializeMeteorOffline } from './react-native-meteor-offline';
 
-Meteor.connect('ws://localhost:3000/websocket');
+Meteor.connect('ws://10.15.188.185:3000/websocket');
 initializeMeteorOffline({ log: true });
 
 const data = [
@@ -26,11 +26,19 @@ const data = [
 class RNDemo extends Component {
   addItem = () => {
     const item = data[Math.floor(Math.random() * data.length)];
-    Meteor.call('links.insert', item.title, item.url, (error) => {
-      if (error) {
-        console.log('Insert error', error.error);
-      }
+
+
+    Meteor.collection('links').insert({
+      url: item.url,
+      title: item.title,
+      createdAt: new Date(),
     });
+
+    // Meteor.call('links.insert', item.title, item.url, (error) => {
+    //   if (error) {
+    //     console.log('Insert error', error.error);
+    //   }
+    // });
   };
 
   pressItem = (url) => {
@@ -56,7 +64,7 @@ class RNDemo extends Component {
           </List>
           <List containerStyle={{ marginBottom: 40 }}>
             {this.props.links.map((link) => {
-              return(
+              return (
                 <ListItem
                   key={link._id}
                   title={link.title}
