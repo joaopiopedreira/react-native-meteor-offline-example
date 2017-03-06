@@ -27,18 +27,18 @@ class RNDemo extends Component {
   addItem = () => {
     const item = data[Math.floor(Math.random() * data.length)];
 
-
-    Meteor.collection('links').insert({
-      url: item.url,
-      title: item.title,
-      createdAt: new Date(),
-    });
-
     // Meteor.call('links.insert', item.title, item.url, (error) => {
     //   if (error) {
     //     console.log('Insert error', error.error);
     //   }
     // });
+
+    // insert works only in disconnected mode
+    Meteor.collection('links').insert({
+      url: item.url,
+      title: item.title,
+      createdAt: new Date(),
+    });
   };
 
   pressItem = (url) => {
@@ -49,6 +49,15 @@ class RNDemo extends Component {
         }
       })
       .catch((err) => console.log('Linking error: ', err));
+  };
+
+  longPressItem = (linkId) => {
+    // update createdAt at long press
+    Meteor.collection('links').update({
+      _id: linkId
+    }, {
+        $set: { createdAt: new Date() },
+      });
   };
 
   render() {
@@ -71,6 +80,7 @@ class RNDemo extends Component {
                   subtitle={link.url}
                   rightTitle={"created at: " + new Date(link.createdAt).toUTCString()}
                   onPress={() => this.pressItem(link.url)}
+                  onLongPress={() => this.longPressItem(link._id)}
                 />
               );
             })}
