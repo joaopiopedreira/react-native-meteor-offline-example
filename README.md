@@ -1,5 +1,12 @@
 Demo app to go along with this blog post, which covers a potential implementation on making an offline first React Native + Meteor app.
 
+## Problem description
+
+There are two problems:
+
+1. The insert in `app/index.js` only works in disconnected mode, but is rejected in connected mode
+2. The update on longPress in `app/index.js` does not work
+
 ## Installation
 
 - Install Meteor
