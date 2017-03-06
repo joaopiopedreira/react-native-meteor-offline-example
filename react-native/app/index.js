@@ -69,6 +69,7 @@ class RNDemo extends Component {
                   key={link._id}
                   title={link.title}
                   subtitle={link.url}
+                  rightTitle={"created at: " + new Date(link.createdAt).toUTCString()}
                   onPress={() => this.pressItem(link.url)}
                 />
               );
