@@ -1,12 +1,13 @@
+import { AsyncStorage, Linking, ScrollView, Text, View } from 'react-native';
 import { Icon, List, ListItem } from 'react-native-elements'
-import { Linking, ScrollView, Text, View } from 'react-native';
 import Meteor, { createContainer } from 'react-native-meteor';
 import React, { Component } from 'react';
 
-import { initializeMeteorOffline } from './react-native-meteor-offline';
+import Links from './config/offlineCollections/Links';
+import OfflineCollectionVersions from './config/offlineCollections/OfflineCollectionVersions';
+import config from './config/config';
 
-Meteor.connect('ws://192.168.2.7:3000/websocket');
-initializeMeteorOffline({ log: true });
+Meteor.connect(config.SERVER_URL);
 
 const data = [
   {
@@ -34,11 +35,17 @@ class RNDemo extends Component {
     // });
 
     // insert works only in disconnected mode
-    Meteor.collection('links').insert({
+    // Meteor.collection('links').insert({
+    //   url: item.url,
+    //   title: item.title,
+    //   createdAt: new Date(),
+    // });
+    Links.insert({
       url: item.url,
       title: item.title,
       createdAt: new Date(),
     });
+
   };
 
   pressItem = (url) => {
@@ -53,14 +60,9 @@ class RNDemo extends Component {
 
   longPressItem = (linkId) => {
     // update createdAt at long press
-    console.log(linkId);
-    console.log(new Date());
-    Meteor.collection('links').update({
-      _id: linkId
-    }, {
-        $set: { createdAt: new Date() },
-      });
-
+    Links.update(linkId, {
+      $set: { createdAt: new Date() },
+    });
   };
 
   render() {
