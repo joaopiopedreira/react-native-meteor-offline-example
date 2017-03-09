@@ -27,24 +27,15 @@ const data = [
 class RNDemo extends Component {
   addItem = () => {
     const item = data[Math.floor(Math.random() * data.length)];
-
-    // Meteor.call('links.insert', item.title, item.url, (error) => {
-    //   if (error) {
-    //     console.log('Insert error', error.error);
-    //   }
-    // });
-
-    // insert works only in disconnected mode
-    // Meteor.collection('links').insert({
-    //   url: item.url,
-    //   title: item.title,
-    //   createdAt: new Date(),
-    // });
-    Links.insert({
-      url: item.url,
-      title: item.title,
-      createdAt: new Date(),
-    });
+    try {
+      Links.insert({
+        url: item.url,
+        title: item.title,
+        createdAt: new Date(),
+      });
+    } catch (err) {
+      this.props.navigator.showLocalAlert(err.message, config.errorStyles);
+    }
 
   };
 
@@ -66,6 +57,7 @@ class RNDemo extends Component {
   };
 
   render() {
+    const links = Links.find();
     return (
       <View style={{ flexGrow: 1, backgroundColor: '#f8f8f8' }}>
         <ScrollView>
@@ -77,7 +69,7 @@ class RNDemo extends Component {
             />
           </List>
           <List containerStyle={{ marginBottom: 40 }}>
-            {this.props.links.map((link) => {
+            {links.map((link) => {
               return (
                 <ListItem
                   key={link._id}
@@ -106,10 +98,86 @@ class RNDemo extends Component {
 }
 
 export default createContainer(() => {
-  Meteor.subscribe('links.all');
+
+
+  const subscribe = (query) => {
+    if (Meteor.status.connected) {
+      // Store the collection "OfflineCollectionVersions" for offline use
+      Meteor.subscribe('offlineCollectionVersions', (err) => {
+        const items = OfflineCollectionVersions.find();
+
+        if (items.length > 0) {
+          OfflineCollectionVersions.store(items);
+        }
+      });
+
+      // When offline, this collection will be emptied. Seed it with the values stored in AsyncStorage.
+      if (OfflineCollectionVersions.find().length === 0) {
+        OfflineCollectionVersions.seed();
+      }
+
+      // Sync the Links collection
+      if (Links.find().length === 0) {
+        !Links.syncing && Links.sync({
+          query: query,
+          syncCallback: (links) => {
+            console.log('synced Links in index.js');
+            console.log(`Number of links: ${links && links.length}`);
+          }
+        });
+      }
+
+      Meteor.ddp.on('added', (payload) => {
+        //console.log('Doc added', payload);
+
+        // Sync the Links collection
+        if (payload && payload.collection === 'offlineCollectionVersions') {
+          if (payload.fields && payload.fields.collection === 'locations') {
+            !Links.syncing && Links.sync({
+              query: query,
+              syncCallback: (links) => {
+                console.log('synced Links in index.js');
+                console.log(`Number of links: ${links && links.length}`);
+              }
+            });
+          }
+        }
+      });
+
+
+      Meteor.ddp.on('changed', (payload) => {
+        //console.log('Doc changed', payload);
+
+        const linksOfflineVersionId = OfflineCollectionVersions.findOne({ collection: 'links' })._id;
+
+        // Sync the Links collection
+        if (payload && payload.collection === 'offlineCollectionVersions') {
+          const newLinksOfflineVersion = payload.fields && (payload.id === linksOfflineVersionId) && payload.fields.offlineVersion;
+          const oldLinksOfflineVersion = OfflineCollectionVersions.findOne(linksOfflineVersionId).offlineVersion;
+
+          // Sync the Links collection
+          if (newLinksOfflineVersion && newLinksOfflineVersion !== oldLinksOfflineVersion && changedEventIds.indexOf(newLinksOfflineVersion) === -1) {
+            //console.log(`newLinksOfflineVersion: ${newLinksOfflineVersion}; oldLinksOfflineVersion: ${oldLinksOfflineVersion}`);
+
+            // TODO: prevent the same 'changed' event to trigger a sync. See react-native-meteor internals
+            changedEventIds.push(newLinksOfflineVersion);
+
+            !Links.syncing && Links.sync({
+              query: query,
+              syncCallback: (links) => {
+                console.log('synced Links in index.js');
+                console.log(`Number of links: ${links && links.length}`);
+              }
+            });
+          }
+
+        }
+      });
+
+    }
+  }
 
   return {
-    links: Meteor.collection('links').find(),
-    status: Meteor.status(),
+    status: Meteor.status()
   };
 }, RNDemo);
