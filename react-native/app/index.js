@@ -5,7 +5,7 @@ import React, { Component } from 'react';
 
 import { initializeMeteorOffline } from './react-native-meteor-offline';
 
-Meteor.connect('ws://10.15.188.185:3000/websocket');
+Meteor.connect('ws://192.168.2.7:3000/websocket');
 initializeMeteorOffline({ log: true });
 
 const data = [
@@ -53,11 +53,14 @@ class RNDemo extends Component {
 
   longPressItem = (linkId) => {
     // update createdAt at long press
+    console.log(linkId);
+    console.log(new Date());
     Meteor.collection('links').update({
       _id: linkId
     }, {
         $set: { createdAt: new Date() },
       });
+
   };
 
   render() {
