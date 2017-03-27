@@ -51,8 +51,10 @@ class RNDemo extends Component {
 
   longPressItem = (linkId) => {
     // update createdAt at long press
+    console.log("Long press! " + linkId);
+
     Links.update(linkId, {
-      $set: { createdAt: new Date() },
+      $set: { title: "new title" },
     });
   };
 
@@ -70,6 +72,7 @@ class RNDemo extends Component {
           </List>
           <List containerStyle={{ marginBottom: 40 }}>
             {links.map((link) => {
+              console.log(link.title);
               return (
                 <ListItem
                   key={link._id}
