@@ -1,6 +1,6 @@
 // Definition of the links collection
 
-import { Mongo } from 'meteor/mongo';
+// import { Mongo } from 'meteor/mongo';
 import OfflineCollectionVersions from '../../api/offlineCollections/offlineCollectionVersions';
 import OfflineMongo from '../../api/offlineCollections/collectionTransformer';
 import { Random } from 'meteor/random';
