@@ -102,83 +102,84 @@ class RNDemo extends Component {
 
 export default createContainer(() => {
 
-
   const subscribe = (query) => {
-    if (Meteor.status.connected) {
-      // Store the collection "OfflineCollectionVersions" for offline use
-      Meteor.subscribe('offlineCollectionVersions', (err) => {
-        const items = OfflineCollectionVersions.find();
+    console.log("test")
 
-        if (items.length > 0) {
-          OfflineCollectionVersions.store(items);
+    // Store the collection "OfflineCollectionVersions" for offline use
+    Meteor.subscribe('offlineCollectionVersions', (err) => {
+      const items = OfflineCollectionVersions.find();
+
+      if (items.length > 0) {
+        OfflineCollectionVersions.store(items);
+      }
+    });
+
+    // When offline, this collection will be emptied. Seed it with the values stored in AsyncStorage.
+    if (OfflineCollectionVersions.find().length === 0) {
+      OfflineCollectionVersions.seed();
+    }
+
+    // Sync the Links collection
+    if (Links.find().length === 0) {
+      !Links.syncing && Links.sync({
+        query: query,
+        syncCallback: (links) => {
+          console.log('synced Links in index.js');
+          console.log(`Number of links: ${links && links.length}`);
         }
       });
+    }
 
-      // When offline, this collection will be emptied. Seed it with the values stored in AsyncStorage.
-      if (OfflineCollectionVersions.find().length === 0) {
-        OfflineCollectionVersions.seed();
-      }
+    Meteor.ddp.on('added', (payload) => {
+      //console.log('Doc added', payload);
 
       // Sync the Links collection
-      if (Links.find().length === 0) {
-        !Links.syncing && Links.sync({
-          query: query,
-          syncCallback: (links) => {
-            console.log('synced Links in index.js');
-            console.log(`Number of links: ${links && links.length}`);
-          }
-        });
+      if (payload && payload.collection === 'offlineCollectionVersions') {
+        if (payload.fields && payload.fields.collection === 'locations') {
+          !Links.syncing && Links.sync({
+            query: query,
+            syncCallback: (links) => {
+              console.log('synced Links in index.js');
+              console.log(`Number of links: ${links && links.length}`);
+            }
+          });
+        }
       }
-
-      Meteor.ddp.on('added', (payload) => {
-        //console.log('Doc added', payload);
-
-        // Sync the Links collection
-        if (payload && payload.collection === 'offlineCollectionVersions') {
-          if (payload.fields && payload.fields.collection === 'locations') {
-            !Links.syncing && Links.sync({
-              query: query,
-              syncCallback: (links) => {
-                console.log('synced Links in index.js');
-                console.log(`Number of links: ${links && links.length}`);
-              }
-            });
-          }
-        }
-      });
+    });
 
 
-      Meteor.ddp.on('changed', (payload) => {
-        //console.log('Doc changed', payload);
+    Meteor.ddp.on('changed', (payload) => {
+      //console.log('Doc changed', payload);
 
-        const linksOfflineVersionId = OfflineCollectionVersions.findOne({ collection: 'links' })._id;
+      const linksOfflineVersionId = OfflineCollectionVersions.findOne({ collection: 'links' })._id;
+
+      // Sync the Links collection
+      if (payload && payload.collection === 'offlineCollectionVersions') {
+        const newLinksOfflineVersion = payload.fields && (payload.id === linksOfflineVersionId) && payload.fields.offlineVersion;
+        const oldLinksOfflineVersion = OfflineCollectionVersions.findOne(linksOfflineVersionId).offlineVersion;
 
         // Sync the Links collection
-        if (payload && payload.collection === 'offlineCollectionVersions') {
-          const newLinksOfflineVersion = payload.fields && (payload.id === linksOfflineVersionId) && payload.fields.offlineVersion;
-          const oldLinksOfflineVersion = OfflineCollectionVersions.findOne(linksOfflineVersionId).offlineVersion;
+        if (newLinksOfflineVersion && newLinksOfflineVersion !== oldLinksOfflineVersion && changedEventIds.indexOf(newLinksOfflineVersion) === -1) {
+          //console.log(`newLinksOfflineVersion: ${newLinksOfflineVersion}; oldLinksOfflineVersion: ${oldLinksOfflineVersion}`);
 
-          // Sync the Links collection
-          if (newLinksOfflineVersion && newLinksOfflineVersion !== oldLinksOfflineVersion && changedEventIds.indexOf(newLinksOfflineVersion) === -1) {
-            //console.log(`newLinksOfflineVersion: ${newLinksOfflineVersion}; oldLinksOfflineVersion: ${oldLinksOfflineVersion}`);
+          // TODO: prevent the same 'changed' event to trigger a sync. See react-native-meteor internals
+          changedEventIds.push(newLinksOfflineVersion);
 
-            // TODO: prevent the same 'changed' event to trigger a sync. See react-native-meteor internals
-            changedEventIds.push(newLinksOfflineVersion);
-
-            !Links.syncing && Links.sync({
-              query: query,
-              syncCallback: (links) => {
-                console.log('synced Links in index.js');
-                console.log(`Number of links: ${links && links.length}`);
-              }
-            });
-          }
-
+          !Links.syncing && Links.sync({
+            query: query,
+            syncCallback: (links) => {
+              console.log('synced Links in index.js');
+              console.log(`Number of links: ${links && links.length}`);
+            }
+          });
         }
-      });
 
-    }
+      }
+    });
+
   }
+  const query = {};
+  subscribe({ query });
 
   return {
     status: Meteor.status()
