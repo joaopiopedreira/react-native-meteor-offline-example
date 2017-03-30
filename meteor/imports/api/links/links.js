@@ -15,15 +15,19 @@ if (!OfflineCollectionVersions.findOne({ collection: collectionName })) {
   });
 }
 
-const Links = new Mongo.Collection(collectionName);
-
-Links.schema = new SimpleSchema({
+let schema = new SimpleSchema({
   url: String,
   title: String,
   createdAt: Date,
 });
 
-Links.attachSchema(Links.schema);
+export const Links = new OfflineMongo(collectionName);
+
+// old style
+// const Links = new OfflineMongo(collectionName);
+
+
+// Links.attachSchema(Links.schema);
 
 // Allow all client-side updates
 Links.allow({
@@ -32,4 +36,4 @@ Links.allow({
   remove: () => true,
 });
 
-export default Links;
+// export default Links;

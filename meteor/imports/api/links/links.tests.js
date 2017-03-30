@@ -2,7 +2,7 @@
 //
 // https://guide.meteor.com/testing.html
 
-import Links from './links.js';
+import { Links } from './links.js';
 import { Meteor } from 'meteor/meteor';
 import { assert } from 'meteor/practicalmeteor:chai';
 

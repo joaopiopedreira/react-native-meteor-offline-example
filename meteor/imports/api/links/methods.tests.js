@@ -4,7 +4,7 @@
 
 import './methods.js';
 
-import Links from './links.js';
+import { Links } from './links.js';
 import { Meteor } from 'meteor/meteor';
 import { assert } from 'meteor/practicalmeteor:chai';
 

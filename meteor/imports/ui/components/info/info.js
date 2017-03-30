@@ -1,6 +1,6 @@
 import './info.html';
 
-import Links from '/imports/api/links/links.js';
+import { Links } from '/imports/api/links/links.js';
 import { Meteor } from 'meteor/meteor';
 
 Template.info.onCreated(function () {
