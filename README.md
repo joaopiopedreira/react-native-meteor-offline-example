@@ -1,7 +1,11 @@
 Demo app to go along with this blog post, which covers a potential implementation on making an offline first React Native + Meteor app.
 
 ## Problem description
-The update item on longPress in `react-native/app/index.js` does not work in both connected and disconnected mode.
+The available data is not pulled from the server.
+
+
+The update item on press in `react-native/app/index.js` does work in both connected and disconnected mode.
+
 
 ## Installation
 
