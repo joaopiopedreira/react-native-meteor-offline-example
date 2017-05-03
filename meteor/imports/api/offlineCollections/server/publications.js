@@ -10,6 +10,7 @@ Meteor.publish('offlineCollectionVersions', function getOfflineCollectionVersion
   return OfflineCollectionVersions.find();
 });
 
-Meteor.publish('users', function getUsersForOffline(userId) {
-  return Meteor.users.find(userId);
-});
+// No accounts implementation
+// Meteor.publish('users', function getUsersForOffline(userId) {
+//   return Meteor.users.find(userId);
+// });
