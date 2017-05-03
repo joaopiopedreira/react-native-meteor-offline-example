@@ -39,23 +39,17 @@ class RNDemo extends Component {
 
   };
 
-  pressItem = (url) => {
-    Linking.canOpenURL(url)
-      .then((supported) => {
-        if (supported) {
-          Linking.openURL(url);
-        }
-      })
-      .catch((err) => console.log('Linking error: ', err));
-  };
-
-  longPressItem = (linkId) => {
-    // update createdAt at long press
+  pressItem = (linkId) => {
     console.log("Long press! " + linkId);
-
-    Links.update(linkId, {
-      $set: { title: "new title" },
-    });
+    try {
+      Links.update(linkId, {
+        $set: {
+          createdAt: new Date()
+        },
+      });
+    } catch (err) {
+      this.props.navigator.showLocalAlert(err.message, config.errorStyles);
+    }
   };
 
   render() {
@@ -79,8 +73,7 @@ class RNDemo extends Component {
                   title={link.title}
                   subtitle={link.url}
                   rightTitle={"created at: " + new Date(link.createdAt).toUTCString()}
-                  onPress={() => this.pressItem(link.url)}
-                  onLongPress={() => this.longPressItem(link._id)}
+                  onPress={() => this.pressItem(link._id)}
                 />
               );
             })}
