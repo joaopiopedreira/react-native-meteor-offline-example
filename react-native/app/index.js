@@ -172,7 +172,7 @@ export default createContainer(() => {
 
   }
   const query = {};
-  subscribe({ query });
+  subscribe(query);
 
   return {
     status: Meteor.status()
